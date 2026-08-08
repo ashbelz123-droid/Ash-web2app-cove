@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07140f">
+  <meta name="description" content="Ash Web2App converts a website into an Android WebView app package.">
+  <title>Ash Web2App — Website to App</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="Ash Web2App home">
+      <span class="brand-mark">A</span>
+      <span><b>Ash</b> Web2App</span>
+    </a>
+    <span class="status-pill"><i></i> Build Studio</span>
+  </header>
+
+  <main id="top" class="shell">
+    <section class="hero">
+      <div class="eyebrow">WEBSITE → ANDROID APP</div>
+      <h1>Turn your website into an app.</h1>
+      <p>Enter your website, choose its identity, and prepare a clean Android WebView app build.</p>
+    </section>
+
+    <section class="builder-card" aria-labelledby="builder-title">
+      <div class="card-head">
+        <div>
+          <span class="step-label">STEP 01</span>
+          <h2 id="builder-title">App details</h2>
+        </div>
+        <span class="secure">Local preview</span>
+      </div>
+
+      <form id="builderForm" novalidate>
+        <label for="websiteUrl">Website URL</label>
+        <div class="input-wrap url-wrap">
+          <span>https://</span>
+          <input id="websiteUrl" name="websiteUrl" type="url" inputmode="url" placeholder="yourwebsite.com" autocomplete="url" required>
+        </div>
+        <p class="hint">Use a public HTTPS website that allows itself to be displayed in a WebView.</p>
+
+        <label for="appName">App name</label>
+        <div class="input-wrap">
+          <input id="appName" name="appName" type="text" maxlength="30" placeholder="My Website App" autocomplete="off" required>
+          <span id="nameCount">0/30</span>
+        </div>
+
+        <label for="packageName">Android package name</label>
+        <div class="input-wrap">
+          <input id="packageName" name="packageName" type="text" maxlength="80" value="com.ashweb2app.myapp" autocomplete="off" required>
+        </div>
+        <p class="hint">Example: com.company.myapp</p>
+
+        <label for="iconFile">App icon <span class="optional">optional</span></label>
+        <label class="upload" for="iconFile">
+          <span id="iconPreview" class="icon-preview">＋</span>
+          <span class="upload-copy"><b id="iconTitle">Upload PNG/JPG</b><small>Recommended: 512 × 512</small></span>
+          <span class="upload-arrow">›</span>
+          <input id="iconFile" type="file" accept="image/png,image/jpeg,image/webp">
+        </label>
+
+        <div id="errorBox" class="error" role="alert" hidden></div>
+
+        <button class="primary-btn" type="submit">
+          <span>Prepare Android App</span><span>→</span>
+        </button>
+      </form>
+    </section>
+
+    <section id="buildSection" class="build-card" hidden aria-live="polite">
+      <div class="card-head">
+        <div>
+          <span class="step-label">STEP 02</span>
+          <h2>Build preparation</h2>
+        </div>
+        <span id="buildState" class="state">Ready</span>
+      </div>
+
+      <div class="app-preview">
+        <div id="resultIcon" class="result-icon">A</div>
+        <div class="result-info">
+          <b id="resultName">My App</b>
+          <span id="resultUrl">https://example.com</span>
+          <small id="resultPackage">com.ashweb2app.myapp</small>
+        </div>
+      </div>
+
+      <div class="progress-track"><div id="progressBar"></div></div>
+      <div class="progress-meta"><span id="progressText">Waiting…</span><b id="progressPercent">0%</b></div>
+
+      <div id="buildLog" class="build-log"></div>
+
+      <div id="downloadArea" class="download-area" hidden>
+        <div class="success-icon">✓</div>
+        <h3>App build configuration ready</h3>
+        <p>The next step is Android compilation. This project includes the build pipeline so the configuration can be sent to a GitHub Actions Android runner.</p>
+        <button id="resetBtn" class="secondary-btn" type="button">Build another app</button>
+      </div>
+    </section>
+
+    <section class="features">
+      <article><span>01</span><b>WebView app</b><p>Your website stays online and the app loads it securely.</p></article>
+      <article><span>02</span><b>Your identity</b><p>Set the app name, Android package and icon.</p></article>
+      <article><span>03</span><b>Build pipeline</b><p>Designed to connect to an Android build runner without paid app-builder APIs.</p></article>
+    </section>
+
+    <footer>© 2026 Ash Web2App · Built for lightweight website-to-app builds.</footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
