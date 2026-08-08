@@ -1,0 +1,4 @@
+export default async function handler(req,res){
+  if(req.method!=='GET')return res.status(405).json({error:'GET only'});const id=Number(req.query?.artifact_id);if(!Number.isInteger(id)||id<=0)return res.status(400).json({error:'Invalid artifact'});if(!process.env.GITHUB_TOKEN)return res.status(500).json({error:'Build service is not configured yet'});
+  try{const r=await fetch(`https://api.github.com/repos/ashbelz123-droid/Ash-web2app-cove/actions/artifacts/${id}/zip`,{headers:{Authorization:`Bearer ${process.env.GITHUB_TOKEN}`,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}});if(!r.ok)return res.status(502).json({error:'APK artifact unavailable'});res.statusCode=200;res.setHeader('Content-Type','application/zip');res.setHeader('Content-Disposition','attachment; filename="ash-web2app-apk.zip"');const body=r.body;if(body){for await(const chunk of body)res.write(chunk)}res.end()}catch{res.status(500).json({error:'Download failed'})}
+}
