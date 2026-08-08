@@ -45,15 +45,15 @@ jobs:
           python3 - <<'PY'
           import os, pathlib, re
           root = pathlib.Path('builder/app')
+          package = os.environ['PACKAGE_NAME']
           gradle = root / 'build.gradle'
           s = gradle.read_text()
-          s = re.sub(r"namespace\s+'[^']+'", "namespace '" + os.environ['PACKAGE_NAME'] + "'", s)
-          s = re.sub(r"applicationId\s+'[^']+'", "applicationId '" + os.environ['PACKAGE_NAME'] + "'", s)
+          s = re.sub(r"namespace\s+'[^']+'", "namespace '" + package + "'", s)
+          s = re.sub(r"applicationId\s+'[^']+'", "applicationId '" + package + "'", s)
           gradle.write_text(s)
           manifest = root / 'src/main/AndroidManifest.xml'
           manifest.write_text(manifest.read_text().replace('android:label="Web2App"', 'android:label="' + os.environ['APP_NAME'].replace('"','') + '"'))
           source = root / 'src/main/java/com/ashweb2app/builder/MainActivity.java'
-          package = os.environ['PACKAGE_NAME']
           java = source.read_text().replace('package com.ashweb2app.builder;', 'package ' + package + ';').replace('"https://example.com"', '"' + os.environ['WEBSITE_URL'] + '"')
           target = root / 'src/main/java' / pathlib.Path(*package.split('.')) / 'MainActivity.java'
           target.parent.mkdir(parents=True, exist_ok=True)
@@ -65,10 +65,20 @@ jobs:
         working-directory: builder
         run: gradle :app:assembleRelease --no-daemon
 
-      - name: Upload APK
+      - name: Create temporary signing key
+        run: keytool -genkeypair -v -keystore web2app.keystore -alias web2app -keyalg RSA -keysize 2048 -validity 3650 -storepass web2app123 -keypass web2app123 -dname "CN=Ash Web2App, OU=Builder, O=Ash Web2App, C=UG"
+
+      - name: Sign APK
+        run: |
+          SDK_BUILD_TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$SDK_BUILD_TOOLS/zipalign" -f 4 builder/app/build/outputs/apk/release/app-release-unsigned.apk app-release-aligned.apk
+          "$SDK_BUILD_TOOLS/apksigner" sign --ks web2app.keystore --ks-pass pass:web2app123 --ks-key-alias web2app --key-pass pass:web2app123 --out app-release.apk app-release-aligned.apk
+          "$SDK_BUILD_TOOLS/apksigner" verify --verbose app-release.apk
+
+      - name: Upload installable APK
         uses: actions/upload-artifact@v4
         with:
           name: web2app-${{ inputs.app_name }}
-          path: builder/app/build/outputs/apk/release/app-release-unsigned.apk
+          path: app-release.apk
           if-no-files-found: error
           retention-days: 7
