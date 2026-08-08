@@ -1,0 +1,75 @@
+name: Build Web2App APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      website_url:
+        description: HTTPS website URL
+        required: true
+        type: string
+      app_name:
+        description: App display name
+        required: true
+        type: string
+      package_name:
+        description: Android package name
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Configure generated app
+        env:
+          WEBSITE_URL: ${{ inputs.website_url }}
+          APP_NAME: ${{ inputs.app_name }}
+          PACKAGE_NAME: ${{ inputs.package_name }}
+        run: |
+          python3 - <<'PY'
+          import os, pathlib, re
+          root = pathlib.Path('builder/app')
+          gradle = root / 'build.gradle'
+          s = gradle.read_text()
+          s = re.sub(r'namespace\s+\'[^\']+\'', "namespace '" + os.environ['PACKAGE_NAME'] + "'", s)
+          s = re.sub(r'applicationId\s+\'[^\']+\'', "applicationId '" + os.environ['PACKAGE_NAME'] + "'", s)
+          gradle.write_text(s)
+          manifest = root / 'src/main/AndroidManifest.xml'
+          ms = manifest.read_text().replace('android:label="Web2App"', 'android:label="' + os.environ['APP_NAME'].replace('"','') + '"')
+          manifest.write_text(ms)
+          java = root / 'src/main/java/com/ashweb2app/builder/MainActivity.java'
+          js = java.read_text().replace('package com.ashweb2app.builder;', 'package ' + os.environ['PACKAGE_NAME'] + ';')
+          java.parent.joinpath(*os.environ['PACKAGE_NAME'].split('.')).mkdir(parents=True, exist_ok=True)
+          target = java.parent.parent.parent.parent / 'java' / pathlib.Path(*os.environ['PACKAGE_NAME'].split('.')) / 'MainActivity.java'
+          target.parent.mkdir(parents=True, exist_ok=True)
+          target.write_text(js)
+          java.unlink()
+          PY
+
+      - name: Build release APK
+        working-directory: builder
+        run: ./gradlew :app:assembleRelease --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: web2app-${{ inputs.app_name }}
+          path: builder/app/build/outputs/apk/release/app-release-unsigned.apk
+          if-no-files-found: error
+          retention-days: 7
